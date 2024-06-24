@@ -1,7 +1,7 @@
 rm(list = ls())
 path_code_util <- 'H:/0001Work/Global_Streamflow/20240215_tidy/0001_Amount/0000_Code/00000_util/'
 
-out_path <- 'H:/0001Work/Global_analyze_detect/Result/02_detect/test/'
+out_path <- 'H:/0001Work/Global_analyze_detect/Result/02_detect/test_1982/'
 dir.create(out_path,showWarnings = F,recursive = T)
 Data_path <- 'H:/0001Work/Global_analyze_detect/Data/'
 
@@ -22,15 +22,15 @@ done <- list.files(out_path,pattern = '.csv',full.names = F) %>%
 get_flowscreen_cpt <- function(x,daily_path,infos,water_yr_path,out_path){
   print(unique(x$Name))
   
-  list.files(path = 'F:/00000Functions/FlowScreen/',
+  list.files(path = 'F:/00000Functions/FunctionsR/FlowScreen/',
              pattern = '.R$',
              full.names = T) %>% lapply(.,source) 
-  list.files(path = 'F:/00000Functions/FlowScreen/',
+  list.files(path = 'F:/00000Functions/FunctionsR/FlowScreen/',
              pattern = '.r$',
              full.names = T) %>% lapply(.,source) 
   
   # x <- dt_annual[STAID %in% '10002', ] 
-  daily_dt <- fread(paste0(daily_path,unique(x$Name),'.csv'))
+  daily_dt <- fread(paste0(daily_path,unique(x$Name),'.csv')) %>% .[year(Date) >= 1982,]
   daily_dt$ID <- daily_dt$STAID
   daily_dt$SYM <- daily_dt$qc
   daily_dt$Agency <- infos[STAID %in% x$STAID,]$Source 
