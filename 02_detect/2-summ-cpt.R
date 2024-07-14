@@ -138,8 +138,8 @@ plot_each <- function(file,out_path,info_path){
                     function(x){
                       if(length(x)  == 3){
                         out<-  data.table(Sig = x[["tcpRes"]][["MetricName"]],
-                                          Slope1 = x[["tcpRes"]][["Slope"]][1],
-                                          Slope2 = x[["tcpRes"]][["Slope"]][2],
+                                          Intercept = x[["tcpRes"]][["Slope"]][1],
+                                          Slope = x[["tcpRes"]][["Slope"]][2],
                                           pval =  x[["tcpRes"]][["pval"]],
                                           cptMethod = x$tcpRes$CPTMethod,
                                           TrendMethod = x$tcpRes$TrendMethod,
@@ -159,7 +159,7 @@ plot_each <- function(file,out_path,info_path){
                                                        STAID= unique(infos$STAID),
                                                        type = 'calendar')
    
-   fwrite(cpt_trend_dt,paste0(out_path,'cpts_trend/',unique(infos$Name),'.csv'))
+   fwrite(cpt_trend_dt,paste0(out_path,'cpts_trend/',SName,'.csv'))
  }
  
 
