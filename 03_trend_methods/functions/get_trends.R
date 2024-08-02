@@ -159,11 +159,18 @@ get_trends <- function(TS_sig, Sigs_selected,
       } 
       
     
-    trend_out %<>% mutate(if_fill = if_fill,
+    trend_out %<>% mutate(Trend_pct = Trend/data[1],
+                          Trend_pct_mean = Trend/mean(data,na.rm =T),
+                          if_fill = if_fill,
                           fill_rate = fill_rate ,
+                          data_length = length(data),
+                          Year_Start = time(data)[1],
+                          Year_End = time(data)[length(data)],
                           Sigs = sigsn
     )
     trend_out %<>% setDT()
+    trend_out[is.infinite(Trend_pct),]$Trend_pct <- NA
+    trend_out[is.infinite(Trend_pct_mean),]$Trend_pct_mean <- NA
   
     print(paste(sigsn,  TrendMethod,'done'))
       return(trend_out)

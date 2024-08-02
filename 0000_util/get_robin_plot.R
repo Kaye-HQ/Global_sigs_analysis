@@ -1,4 +1,4 @@
-get_robin_plot <- function(r,sf_fn,colorsn,limitsn,breaksn,alphan,Title,DataType,VarType){
+get_robin_plot <- function(r,sf_fn,sizen,colorsn,limitsn,breaksn,alphan,Title,DataType,VarType){
   
   library(terra)
   library(tidyterra) # if fail, use pak::pkg_install to install... 
@@ -26,19 +26,19 @@ get_robin_plot <- function(r,sf_fn,colorsn,limitsn,breaksn,alphan,Title,DataType
       
       r <- r %>% sf::st_transform(crs_robin) 
       p0 <- ggplot()+
-        geom_spatvector(data = r, aes(color = Value),shape = 20,alpha = alphan)
+        geom_spatvector(data = r, aes(color = Value,alpha = p_group),shape = 20,size = sizen)
       
     }else if(VarType %in% 'VectorPolygon'){
       
       r <- r %>% sf::st_transform(crs_robin) 
       p0 <- ggplot()+
-        geom_spatvector(data = r, aes(fill= Value),color = 'grey80',size = 0.1,alpha = alphan)
+        geom_spatvector(data = r, aes(fill= Value,alpha = p_group),color = 'grey80',size = 0.1)
       
     }else if(VarType %in% 'Raster'){
       # read raster and reproject
       r <- r %>% terra::project(crs_robin) 
       p0 <- ggplot()+
-        geom_spatraster(data = r, maxcell = 1*10^7,alpha = alphan)
+        geom_spatraster(data = r, maxcell = 1*10^7,aes(alpha = p_group))
     }
   
   # set basemap and limits

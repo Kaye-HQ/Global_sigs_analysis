@@ -1,67 +1,45 @@
 rm(list = ls())
 path_code_util <- 'H:/0001Work/Global_Streamflow/20240215_tidy/0001_Amount/0000_Code/00000_util/'
 
-Path0 <- 'H:/0001Work/Global_analyze_detect/Result/03_trend_methods/'
-out_path <- paste0(Path0,'02_trend_summary/')
+Path0 <- 'H:/0001Work/Global_analyze_detect/Result/04_cpt_methods/'
+out_path <- paste0(Path0,'02_cpt_summary/')
 dir.create(out_path,showWarnings = F,recursive = T)
 # 
-# Trend_all <- list.files(Path0,
+# cpt_all <- list.files(Path0,
 #                         pattern = '.csv',
 #                         full.names = T,
-#                         recursive = T) %>% 
+#                         recursive = T) %>%
 #   lapply(., fread) %>%
 #   rbindlist(.,
 #             use.names = T,
 #             fill = T)
 # 
-# fwrite(Trend_all,paste0(out_path,'Trend.csv'))
-# 
-# cmp <- Trend_all %>%
-#   group_by(.,
-#            STAID,
-#            yearType,
-#            Sigs,fill_rate) %>%
-#   summarise(.,
-#             lm = Trend[which(TrendMethod %in% 'lm')],
-#             Trend_median = median(Trend,na.rm = T),
-#             Trend_sd = sd(Trend,na.rm = T),
-#             p_lm =  p[which(TrendMethod %in% 'lm')],
-#             p_median = median(p,na.rm = T),
-#             p_sd = sd(p,na.rm = T)
-#             )
-# 
-# cmp %<>% setDT()
-# fwrite(cmp,paste0(out_path,'Trend_Cmp.csv'))
-# 
-# p <- ggplot(cmp[Sigs %in% c( "Quantile_05"   ,"Quantile_10" , 
-#                              "Mean",  "Quantile_90"  , "Quantile_95",
-#                              "BFI_Chapman"  ,  "BFI_Chapman_maxwell", "BFI_Eckhardt"  ,
-#                              "BFI_Lynehollick"  ,"BFI_UKIH"),]) + 
-#   geom_point(aes(x = lm,
-#                  y = Trend_median))+
-#   facet_wrap(yearType~Sigs,scales = 'free') + 
-#   geom_abline() + 
-#   theme_bw() + 
-#   theme(strip.background = element_blank())
-# ggsave(paste0(out_path,'Trend_lm_scatter.pdf'),p,width = 12,height = 10)
-# 
-# 
-# p2 <- ggplot(cmp[Sigs %in% c( "Quantile_05"   ,"Quantile_10" , 
-#                              "Mean",  "Quantile_90"  , "Quantile_95",
-#                              "BFI_Chapman"  ,  "BFI_Chapman_maxwell", "BFI_Eckhardt"  ,
-#                              "BFI_Lynehollick"  ,"BFI_UKIH"),]) + 
-#   geom_point(aes(x = p_lm,
-#                  y = p_median),
-#              alpha = 0.1,
-#              size = 0.5)+
-#   facet_wrap(yearType~Sigs,scales = 'free') + 
-#   geom_abline() + 
-#   theme_bw() + 
-#   theme(strip.background = element_blank())
-# ggsave(paste0(out_path,'p_lm_scatter.pdf'),p2,width = 12,height = 10)
+# fwrite(cpt_all,paste0(out_path,'Cpt_all.csv'))
+
+cpt_all <- paste0(out_path,'Cpt_all.csv') %>% fread() %>% 
+  mutate(cpt_filtered_final =   ifelse(cpts + 3 >= Year_End | cpts - 3 <= Year_Start,
+                                 NA,
+                                 floor(cpts)
+                                 )
+  ) %>% setDT() %>% .[!is.na(cpt_filtered_final),]
+# cpt_all$cpt_filtered <- NULL
+# cpt_all$cpt_filtered2 <- NULL
 
 
-Trend_all <- paste0(out_path,'Trend.csv') %>% fread()
+cpt_prob <- cpt_all %>% group_by(STAID,Sigs,yearType,cpt_filtered_final)  %>%
+  summarise(Fill_rate = unique(fill_rate),
+            ncount_method = length(unique(cptMethod))/10,
+            methods = paste(unique(cptMethod),collapse = ',')
+  ) %<>% setDT()
+
+cpt_prob_final <- cpt_prob[ncount_method > 0.5 & Fill_rate < 0.1,]
+
+cpt_counts <- cpt_prob_final %>% group_by(STAID,Sigs,yearType,methods)  %>%
+  summarise(ncount = length(unique(cpt_filtered_final)),
+            cpts = paste(unique(cpt_filtered_final),collapse = ','),
+            Prob =  paste(unique(ncount_method),collapse = ',')
+  )%>% setDT()
+
 ## 径流信号趋势全球分布图
 source('../0000_util/get_robin_plot.R')
     # prepare sf, transform data coordinates
@@ -75,7 +53,7 @@ source('../0000_util/get_robin_plot.R')
     # world <- map_data("world")
     sf_fn <-  'F:/0000Data/BaseFile/Global_land/ne_110m_land.shp'
 
-    Trend_all %<>% mutate(.,
+    cpt_all %<>% mutate(.,
                           p_group = ifelse(is.na(p),
                                            'NA',
                                            ifelse(p > 0.1,'Not Significant',
